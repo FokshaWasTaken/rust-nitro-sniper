@@ -1,6 +1,6 @@
 [package]
 name = "rust-nitro-sniper"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Mel"]
 edition = "2018"
 
@@ -12,6 +12,9 @@ regex = "1.3.9"
 lazy_static = "1.4.0"
 hyper = "0.13.7"
 hyper-tls = "0.4.3"
+chrono = "0.4.13"
+log = "0.4.11"
+colored = "2.0.0"
 
 [dependencies.serenity]
 git = "https://github.com/acdenisSK/serenity"
@@ -22,3 +25,7 @@ features = ["client", "rustls_backend", "model", "builder", "cache", "http", "ut
 [dependencies.tokio]
 version = "0.2.22"
 features = ["macros"]
+
+[dependencies.fern]
+version = "0.6.0"
+features = ["colored"]
