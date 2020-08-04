@@ -6,9 +6,11 @@ Hi! **RNS** is a **simple** and **easy to use** Nitro Sniper for Discord written
 
 1. [Download](https://github.com/Melonai/rust-nitro-sniper/releases/) or build an executable for your respective platform.
 
-2. Copy the `.env.example` file from this repository into the directory your executable is in and rename it to `.env`.
+2. Run the executable once in your directory of choice.
 
-3. Run the executable.
+3. Change the default values in the `rna-config.json` config file created by the executable in your directory.
+
+3. Run the executable again and enjoy!
 ---
 #### Disclaimer
 

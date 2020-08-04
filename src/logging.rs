@@ -1,6 +1,7 @@
-use log::SetLoggerError;
-use fern::colors::{ColoredLevelConfig, Color};
 use colored::*;
+use fern::colors::{Color, ColoredLevelConfig};
+use log::SetLoggerError;
+use std::io::{stdin, stdout, Read, Write};
 
 pub fn set_up_logger() -> Result<(), SetLoggerError> {
     let colors = ColoredLevelConfig::new()
@@ -35,7 +36,11 @@ pub fn set_up_logger() -> Result<(), SetLoggerError> {
 }
 
 pub fn log_error_and_exit(kaomoji: &str, error: &str) {
-    error!("{}{}", kaomoji.bright_white().bold(), error);
+    error!("{} {}", kaomoji.bright_white().bold(), error);
+    let mut stdout = stdout();
+    stdout.write(b"Press the enter key to exit...").unwrap();
+    stdout.flush().unwrap();
+    stdin().read(&mut [0]).unwrap();
     std::process::exit(1);
 }
 

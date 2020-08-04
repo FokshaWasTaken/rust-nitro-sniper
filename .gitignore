@@ -1,4 +1,4 @@
 /target
 /*.iml
 /.idea/
-/.env
+rna-config.json

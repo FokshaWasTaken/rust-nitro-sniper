@@ -229,12 +229,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dotenv"
-version = "0.15.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
-
-[[package]]
 name = "dtoa"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1039,17 +1033,19 @@ dependencies = [
 
 [[package]]
 name = "rust-nitro-sniper"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "chrono",
  "colored 2.0.0",
- "dotenv",
  "fern",
  "hyper",
  "hyper-tls",
  "lazy_static",
  "log",
  "regex",
+ "serde",
+ "serde_derive",
+ "serde_json",
  "serenity",
  "tokio",
 ]
