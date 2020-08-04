@@ -1,0 +1,24 @@
+[package]
+name = "rust-nitro-sniper"
+version = "0.1.0"
+authors = ["Mel"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dotenv = "0.15.0"
+regex = "1.3.9"
+lazy_static = "1.4.0"
+hyper = "0.13.7"
+hyper-tls = "0.4.3"
+
+[dependencies.serenity]
+git = "https://github.com/acdenisSK/serenity"
+branch = "await_next"
+default-features = false
+features = ["client", "rustls_backend", "model", "builder", "cache", "http", "utils", "gateway"]
+
+[dependencies.tokio]
+version = "0.2.22"
+features = ["macros"]
