@@ -9,18 +9,18 @@ extern crate lazy_static;
 extern crate log;
 #[macro_use]
 extern crate serde_derive;
-extern crate serde_json;
 extern crate chrono;
 extern crate colored;
 extern crate fern;
+extern crate futures;
 extern crate hyper;
 extern crate hyper_tls;
 extern crate regex;
 extern crate serde;
+extern crate serde_json;
 extern crate serenity;
 extern crate tokio;
 
-use crate::logging::log_error_and_exit;
 use crate::handler::Handler;
 use colored::*;
 use hyper::{Body, Client};
@@ -31,31 +31,55 @@ use serenity::Client as DiscordClient;
 async fn main() {
     logging::set_up_logger().expect("(o_O) Failed setting up logger. (HOW?)");
 
-    let config = config::try_read_config()
-        .map_err(|e| e.handle())
-        .unwrap();
-
-    let main_token = config.main_token;
+    let config = config::try_read_config().map_err(|e| e.handle()).unwrap();
+    let main_token = config.main_token();
 
     let https = HttpsConnector::new();
     let client = Client::builder().build::<_, Body>(https);
+
+    let sniping_tokens = config.get_all_sniping_tokens();
+
+    if sniping_tokens.is_empty() {
+        log_error_and_exit!("┐(¯ω¯;)┌", "I need at least one token to snipe with...");
+    }
+
+    pretty_info!(
+        "(o·ω·o)",
+        "Connecting to {} account(s).",
+        sniping_tokens.len()
+    );
 
     let handler = Handler {
         client,
         main_token: main_token.clone(),
     };
 
-    pretty_info!("(o·ω·o)", "Connecting to account.");
+    let mut tasks = Vec::new();
 
-    let mut discord_client = DiscordClient::new(&main_token)
-        .event_handler(handler)
-        .await
-        .map_err(|_| log_error_and_exit("(-_-;)°°°", "Couldn't instantiate Discord client."))
-        .unwrap();
+    for (index, token) in sniping_tokens.iter().enumerate() {
+        let discord_client_result = DiscordClient::new(&token)
+            .event_handler(handler.clone())
+            .await;
 
-    discord_client
-        .start()
-        .await
-        .map_err(|_| log_error_and_exit("(＃`Д´)", "Couldn't make a connection to Discord. Is your token correct?"))
-        .unwrap();
+        if let Ok(mut discord_client) = discord_client_result {
+            tasks.push(tokio::spawn(async move {
+                let connection_result = discord_client.start().await;
+                if connection_result.is_err() {
+                    pretty_error!(
+                        "(＃`Д´)",
+                        "Couldn't make a connection to Discord on token #{}. Is your token correct?",
+                        index
+                    );
+                }
+            }));
+        } else {
+            pretty_error!(
+                "(-_-;)°°°",
+                "Couldn't instantiate a Discord client for token #{}.",
+                index,
+            );
+        }
+    }
+
+    futures::future::join_all(tasks).await;
 }

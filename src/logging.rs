@@ -35,13 +35,20 @@ pub fn set_up_logger() -> Result<(), SetLoggerError> {
     Ok(())
 }
 
-pub fn log_error_and_exit(kaomoji: &str, error: &str) {
-    error!("{} {}", kaomoji.bright_white().bold(), error);
+pub fn pause_exit() {
     let mut stdout = stdout();
     stdout.write(b"Press the enter key to exit...").unwrap();
     stdout.flush().unwrap();
     stdin().read(&mut [0]).unwrap();
     std::process::exit(1);
+}
+
+#[macro_export]
+macro_rules! log_error_and_exit {
+    ($e:tt, $($arg:tt)+) => (
+        error!("{} {}", $e.bright_white().bold(), format!($($arg)+));
+        crate::logging::pause_exit();
+    )
 }
 
 #[macro_export]

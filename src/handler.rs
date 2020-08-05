@@ -1,14 +1,15 @@
+use crate::{pretty_error, pretty_info, pretty_warn};
 use colored::*;
 use hyper::client::HttpConnector;
-use hyper::{Client, Method, StatusCode, Request, Body};
+use hyper::{Body, Client, Method, Request, StatusCode};
 use hyper_tls::HttpsConnector;
 use regex::Regex;
 use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::prelude::{Context, EventHandler};
-use crate::{pretty_info, pretty_warn, pretty_error};
 
+#[derive(Clone)]
 pub struct Handler {
     pub client: Client<HttpsConnector<HttpConnector>>,
     pub main_token: String,
@@ -72,7 +73,7 @@ impl EventHandler for Handler {
         );
         pretty_info!(
             "( ´-ω·)±┻┳══━─",
-            "Sniping in {} guilds...",
+            "...which is now sniping in {} guilds...",
             data.guilds.len().to_string().as_str().magenta().bold()
         );
     }
