@@ -1,4 +1,4 @@
-use crate::{pretty_error, pretty_info, pretty_warn};
+use crate::{log_error_and_exit, pretty_error, pretty_info, pretty_warn};
 use colored::*;
 use hyper::client::HttpConnector;
 use hyper::{Body, Client, Method, Request, StatusCode};
@@ -8,10 +8,13 @@ use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::prelude::{Context, EventHandler};
+use std::fmt;
+
+type HttpsClient = Client<HttpsConnector<HttpConnector>>;
 
 #[derive(Clone)]
 pub struct Handler {
-    pub client: Client<HttpsConnector<HttpConnector>>,
+    pub client: HttpsClient,
     pub main_token: String,
 }
 
@@ -24,7 +27,7 @@ impl Handler {
                 gift_token
             ))
             .header("Content-Type", "application/json")
-            .header("Authorization", self.main_token.clone())
+            .header("Authorization", &self.main_token)
             .body(Body::from(format!("{{\"channel_id\":{}}}", channel_id)))
             .unwrap();
 
@@ -76,5 +79,80 @@ impl EventHandler for Handler {
             "...which is now sniping in {} guilds...",
             data.guilds.len().to_string().as_str().magenta().bold()
         );
+    }
+}
+
+#[derive(Deserialize, Clone)]
+pub struct Profile {
+    username: String,
+    discriminator: String,
+}
+
+impl fmt::Display for Profile {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}#{}", self.username, self.discriminator)
+    }
+}
+
+pub enum ProfileError {
+    Unauthorized,
+    RateLimited,
+    ConnectionError,
+    Other,
+}
+
+impl ProfileError {
+    pub fn handle(&self) {
+        match self {
+            ProfileError::Unauthorized => {
+                log_error_and_exit!(
+                    "┐(¯ω¯;)┌",
+                    "I couldn't verify your main token. Is it correct?"
+                );
+            }
+            ProfileError::RateLimited => {
+                log_error_and_exit!("(x_x)", "Your're rate-limited. Try again later...");
+            }
+            ProfileError::ConnectionError => {
+                log_error_and_exit!("┐(¯ω¯;)┌", "Requesting failed. Check your connection!");
+            }
+            ProfileError::Other => {
+                log_error_and_exit!("┐(¯ω¯;)┌", "Received unknown response for Discord...");
+            }
+        }
+    }
+}
+
+pub async fn get_profile_for_token(
+    token: &str,
+    client: &HttpsClient,
+) -> Result<Profile, ProfileError> {
+    let request = Request::builder()
+        .method(Method::GET)
+        .uri("https://discordapp.com/api/v6/users/@me")
+        .header("Authorization", token)
+        .body(Body::empty())
+        .unwrap();
+
+    let response_result = client.request(request).await;
+
+    if let Ok(response) = response_result {
+        match response.status() {
+            StatusCode::OK => {
+                let streamed_bytes = hyper::body::to_bytes(response.into_body()).await;
+                if let Ok(bytes) = streamed_bytes {
+                    let body = String::from_utf8(bytes.to_vec()).expect("Received bad stream.");
+                    let profile = serde_json::from_str(&body).expect("Malformed response.");
+                    Ok(profile)
+                } else {
+                    Err(ProfileError::Other)
+                }
+            }
+            StatusCode::UNAUTHORIZED => Err(ProfileError::Unauthorized),
+            StatusCode::TOO_MANY_REQUESTS => Err(ProfileError::RateLimited),
+            _ => Err(ProfileError::Other),
+        }
+    } else {
+        Err(ProfileError::ConnectionError)
     }
 }

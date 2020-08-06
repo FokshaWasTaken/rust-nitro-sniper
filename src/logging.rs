@@ -37,9 +37,9 @@ pub fn set_up_logger() -> Result<(), SetLoggerError> {
 
 pub fn pause_exit() {
     let mut stdout = stdout();
-    stdout.write(b"Press the enter key to exit...").unwrap();
+    stdout.write_all(b"Press the enter key to exit...").unwrap();
     stdout.flush().unwrap();
-    stdin().read(&mut [0]).unwrap();
+    stdin().read_exact(&mut [0]).unwrap();
     std::process::exit(1);
 }
 

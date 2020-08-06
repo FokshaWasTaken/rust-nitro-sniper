@@ -1,5 +1,5 @@
 mod config;
-mod handler;
+mod discord;
 #[macro_use]
 mod logging;
 
@@ -21,7 +21,6 @@ extern crate serde_json;
 extern crate serenity;
 extern crate tokio;
 
-use crate::handler::Handler;
 use colored::*;
 use hyper::{Body, Client};
 use hyper_tls::HttpsConnector;
@@ -31,25 +30,40 @@ use serenity::Client as DiscordClient;
 async fn main() {
     logging::set_up_logger().expect("(o_O) Failed setting up logger. (HOW?)");
 
-    let config = config::try_read_config().map_err(|e| e.handle()).unwrap();
-    let main_token = config.main_token();
-
     let https = HttpsConnector::new();
     let client = Client::builder().build::<_, Body>(https);
 
-    let sniping_tokens = config.get_all_sniping_tokens();
+    let config = config::try_read_config().map_err(|e| e.handle()).unwrap();
+    let main_token = config.main_token();
+    let main_profile = discord::get_profile_for_token(&main_token, &client)
+        .await
+        .map_err(|e| e.handle())
+        .unwrap();
+
+    pretty_info!(
+        "o(»ω«)o",
+        "If we're lucky you'll get Nitro on {}!",
+        main_profile
+    );
+
+    let mut sniping_tokens = config.get_all_sniping_tokens();
+    sniping_tokens.sort();
+    sniping_tokens.dedup();
 
     if sniping_tokens.is_empty() {
-        log_error_and_exit!("┐(¯ω¯;)┌", "I need at least one token to snipe with...");
+        log_error_and_exit!(
+            "┐(¯ω¯;)┌",
+            "...but I need at least one token to snipe with..."
+        );
     }
 
     pretty_info!(
         "(o·ω·o)",
-        "Connecting to {} account(s).",
+        "I'll be sniping on {} account(s)!",
         sniping_tokens.len()
     );
 
-    let handler = Handler {
+    let handler = discord::Handler {
         client,
         main_token: main_token.clone(),
     };
@@ -57,7 +71,7 @@ async fn main() {
     let mut tasks = Vec::new();
 
     for (index, token) in sniping_tokens.iter().enumerate() {
-        let discord_client_result = DiscordClient::new(&token)
+        let discord_client_result = DiscordClient::new(token)
             .event_handler(handler.clone())
             .await;
 
@@ -82,4 +96,5 @@ async fn main() {
     }
 
     futures::future::join_all(tasks).await;
+    log_error_and_exit!("(x_x)", "Lost all connections.");
 }
