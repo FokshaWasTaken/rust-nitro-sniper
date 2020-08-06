@@ -59,7 +59,7 @@ async fn main() {
 
     pretty_info!(
         "(o·ω·o)",
-        "I'll be sniping on {} account(s)!",
+        "I'll be sniping on {} account(s)! Please wait until I connect to them...",
         sniping_tokens.len()
     );
 
