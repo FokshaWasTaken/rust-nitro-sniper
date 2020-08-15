@@ -96,7 +96,7 @@ impl EventHandler for Handler {
     }
 
     async fn ready(&self, _ctx: Context, data: Ready) {
-        let user = format!("{}#{}", data.user.name, data.user.discriminator);
+        let user = format!("{}#{:0>4}", data.user.name, data.user.discriminator);
         pretty_info!(
             "(o·ω·o)",
             "Connected as {}!",
