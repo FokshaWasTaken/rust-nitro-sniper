@@ -20,7 +20,8 @@ The `rna-config.json` file created by RNA is formatted in this manner:
 {
   "main_token": "YOUR_TOKEN",
   "snipe_on_main_token": true,
-  "sub_tokens": ["YOUR_SECOND_TOKEN", "...", "YOUR_NTH_TOKEN"]
+  "sub_tokens": ["YOUR_SECOND_TOKEN", "...", "YOUR_NTH_TOKEN"],
+  "webhook": ""
 }
 ```
 ...where:
@@ -29,7 +30,9 @@ The `rna-config.json` file created by RNA is formatted in this manner:
 
 - ...the `snipe_on_main_token` property controls whether RNA tries connecting to your main account and tries to snipe a Nitro in your guilds.
 
-- ...and the `sub_tokens` property is a list of all the tokens with which RNA will try to snipe.
+- ...the `sub_tokens` property is a list of all the tokens with which RNA will try to snipe.
+
+- ...and the `webhook` is the Discord webhook URL. Leave blank if you don't need webhook messages.
 
 ---
 #### Disclaimer

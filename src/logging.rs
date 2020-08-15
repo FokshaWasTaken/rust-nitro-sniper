@@ -75,6 +75,6 @@ macro_rules! pretty_error {
 #[macro_export]
 macro_rules! pretty_success {
     ($e:tt, $($arg:tt)+) => (
-        error!("{} {}", $e.bright_green().bold(), format!($($arg.green())+));
+        info!("{} {}", $e.bright_green().bold(), format!("{}", $($arg.green())+));
     )
 }

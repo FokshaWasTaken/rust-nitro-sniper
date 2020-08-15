@@ -1,5 +1,6 @@
 mod config;
 mod discord;
+mod webhook;
 #[macro_use]
 mod logging;
 
@@ -25,6 +26,7 @@ use colored::*;
 use hyper::{Body, Client};
 use hyper_tls::HttpsConnector;
 use serenity::Client as DiscordClient;
+use std::sync::Arc;
 
 #[tokio::main]
 async fn main() {
@@ -63,9 +65,14 @@ async fn main() {
         sniping_tokens.len()
     );
 
-    let handler = discord::Handler {
+    let handler_info = discord::HandlerInfo {
         client,
-        main_token: main_token.clone(),
+        config,
+        main_profile,
+    };
+
+    let handler = discord::Handler {
+        info: Arc::new(handler_info),
     };
 
     let mut tasks = Vec::new();

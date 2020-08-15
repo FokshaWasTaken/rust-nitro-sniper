@@ -8,6 +8,7 @@ pub struct Config {
     main_token: String,
     snipe_on_main_token: bool,
     sub_tokens: Vec<String>,
+    webhook: String,
 }
 
 impl Default for Config {
@@ -16,6 +17,7 @@ impl Default for Config {
             main_token: "YOUR_TOKEN_HERE".to_string(),
             snipe_on_main_token: true,
             sub_tokens: Vec::new(),
+            webhook: "".to_string(),
         }
     }
 }
@@ -31,6 +33,14 @@ impl Config {
             tokens.insert(0, self.main_token());
         }
         tokens
+    }
+
+    pub fn webhook(&self) -> Option<String> {
+        if self.webhook != "" {
+            Some(self.webhook.clone())
+        } else {
+            None
+        }
     }
 }
 
