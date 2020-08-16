@@ -57,13 +57,13 @@ impl ConfigReadError {
                 Ok(_) => {
                     log_error_and_exit!(
                             "┐(¯ω¯;)┌",
-                            "No previous config file found. Please change your configuration in the rna-config.json file I just created!"
+                            "No previous config file found. Please change your configuration in the rns-config.json file I just created!"
                         );
                 }
                 Err(_) => {
                     log_error_and_exit!(
                             "┐(¯ω¯;)┌",
-                            "No previous config file found. Please create an rna-config.json file with your configuration!"
+                            "No previous config file found. Please create an rns-config.json file with your configuration!"
                         );
                 }
             },
@@ -86,7 +86,7 @@ enum ConfigWriteError {
 }
 
 pub fn try_read_config() -> Result<Config, ConfigReadError> {
-    let mut file = File::open("rna-config.json").map_err(|_| ConfigReadError::NoSuchFile)?;
+    let mut file = File::open("rns-config.json").map_err(|_| ConfigReadError::NoSuchFile)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .map_err(|_| ConfigReadError::FailedReading)?;
@@ -95,7 +95,7 @@ pub fn try_read_config() -> Result<Config, ConfigReadError> {
 
 fn create_config() -> Result<(), ConfigWriteError> {
     let default_config = Config::default();
-    let mut file = File::create("rna-config.json").map_err(|_| ConfigWriteError::FailedCreating)?;
+    let mut file = File::create("rns-config.json").map_err(|_| ConfigWriteError::FailedCreating)?;
     file.write_all(
         serde_json::to_string_pretty(&default_config)
             .unwrap()

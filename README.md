@@ -8,13 +8,13 @@ Hi! **RNS** is a **simple** and **easy to use** Nitro Sniper for Discord written
 
 2. Run the executable once in your directory of choice.
 
-3. Change the default values as explained in [Configuration](https://github.com/Melonai/rust-nitro-sniper#configuration) in the `rna-config.json` config file created by the executable in your directory.
+3. Change the default values as explained in [Configuration](https://github.com/Melonai/rust-nitro-sniper#configuration) in the `rns-config.json` config file created by the executable in your directory.
 
 3. Run the executable again and enjoy!
 
 ## Configuration
 
-The `rna-config.json` file created by RNA is formatted in this manner:
+The `rns-config.json` file created by RNS is formatted in this manner:
 
 ```json
 {
@@ -28,9 +28,9 @@ The `rna-config.json` file created by RNA is formatted in this manner:
 
 - ...the `main_token` property is the account that will receive the Nitro in the case that a snipe succeeds.
 
-- ...the `snipe_on_main_token` property controls whether RNA tries connecting to your main account and tries to snipe a Nitro in your guilds.
+- ...the `snipe_on_main_token` property controls whether RNS tries connecting to your main account and tries to snipe a Nitro in your guilds.
 
-- ...the `sub_tokens` property is a list of all the tokens with which RNA will try to snipe.
+- ...the `sub_tokens` property is a list of all the tokens with which RNS will try to snipe.
 
 - ...and the `webhook` is the Discord webhook URL. Leave blank if you don't need webhook messages.
 

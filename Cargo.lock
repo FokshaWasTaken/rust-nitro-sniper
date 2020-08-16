@@ -1033,7 +1033,7 @@ dependencies = [
 
 [[package]]
 name = "rust-nitro-sniper"
-version = "2.2.1"
+version = "2.2.2"
 dependencies = [
  "chrono",
  "colored 2.0.0",
