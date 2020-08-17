@@ -16,7 +16,12 @@ impl Webhook {
         Webhook { url }
     }
 
-    pub async fn send(&self, message: Message, client: &HttpsClient, finder: Profile) -> Result<(), ()> {
+    pub async fn send(
+        &self,
+        message: Message,
+        client: &HttpsClient,
+        finder: Profile,
+    ) -> Result<(), ()> {
         let payload = WebhookPayload::new(message, finder);
         let request = Request::builder()
             .method(Method::POST)

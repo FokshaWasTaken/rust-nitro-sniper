@@ -53,7 +53,24 @@ impl Handler {
                 StatusCode::NOT_FOUND => pretty_error!("(╥ω╥)", "Code was fake."),
                 StatusCode::BAD_REQUEST => pretty_error!("(╥ω╥)", "Code was already redeemed."),
                 StatusCode::TOO_MANY_REQUESTS => pretty_warn!("(x_x)", "We were rate-limited..."),
-                _ => pretty_error!("┐(¯ω¯;)┌", "Received unknown response..."),
+                unknown => {
+                    pretty_error!(
+                        "┐(¯ω¯;)┌",
+                        "Received unknown response... ({}{})",
+                        unknown.as_str(),
+                        unknown
+                            .canonical_reason()
+                            .map_or_else(|| "".to_string(), |r| format!(" {}", r))
+                    );
+                    if let Ok(Ok(body)) = hyper::body::to_bytes(response.into_body())
+                        .await
+                        .map(|b| String::from_utf8(b.to_vec()))
+                    {
+                        pretty_error!("->", "...with this body: {}", body);
+                    } else {
+                        pretty_error!("->", "...and couldn't parse the body of the response.")
+                    }
+                }
             }
         } else {
             pretty_warn!("┐(¯ω¯;)┌", "Requesting failed. Check your connection!");
