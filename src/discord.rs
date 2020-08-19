@@ -36,7 +36,6 @@ impl Handler {
                 "https://discordapp.com/api/v6/entitlements/gift-codes/{}/redeem",
                 gift_token
             ))
-            .header("Content-Type", "application/json")
             .header("Authorization", &self.info.config.main_token())
             .header("Content-Length", 0)
             .body(Body::empty())
