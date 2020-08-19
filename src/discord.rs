@@ -38,10 +38,8 @@ impl Handler {
             ))
             .header("Content-Type", "application/json")
             .header("Authorization", &self.info.config.main_token())
-            .body(Body::from(format!(
-                "{{\"channel_id\":{}}}",
-                message.channel_id.to_string()
-            )))
+            .header("Content-Length", 0)
+            .body(Body::empty())
             .unwrap();
 
         if let Ok(response) = self.info.client.request(request).await {

@@ -1,6 +1,6 @@
 [package]
 name = "rust-nitro-sniper"
-version = "2.2.3"
+version = "2.2.4"
 authors = ["Mel"]
 edition = "2018"
 
@@ -31,3 +31,7 @@ features = ["macros"]
 [dependencies.fern]
 version = "0.6.0"
 features = ["colored"]
+
+[dependencies.openssl]
+version = "0.10.30"
+features = ["vendored"]
