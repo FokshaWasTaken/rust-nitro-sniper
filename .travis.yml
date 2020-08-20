@@ -1,9 +1,8 @@
 dist: xenial
 language: rust
 services: docker
-sudo: required
 
-matrix:
+jobs:
   include:
     - env: TARGET=x86_64-unknown-linux-musl
     - env: TARGET=x86_64-apple-darwin
@@ -22,7 +21,7 @@ before_deploy:
   - sh ci/before_deploy.sh
 
 deploy:
-  api_key:
+  token:
     secure: cBQU52vaX7ZFK16uTgFNv26MTNTGahHUmozOk7pvZE/tU0KmDwTHuzqYnf0h3kRErH11uMxvys3s0rEb8Ag6h+d1X2Ko8WmJ0ACf3y3BPWlBvela0MGjvE899prEERhBeWOtDCT3eQ0lb8j9hRoNiW5cQUNVs355L0IAgwlML5iq/tispStL8CnvyEKo4Vf+GbhkGLf8XSd+1pNZw3KE8mD58JrbKbLu4u/2o7YiCnjw8ACI9osqHagrZhM/nwVKj4Mt8FSue4lVXdWJ0DFOS6qvv6ofHlGWRNLW6LXipDlprVjOztXSOQcG5n+6nvJryjqfw0J+WFgfuoc5ZG0JcW9VwKi3DbvZgIQnYbcDzpQCWPYif1KGiPRf62Cxn5a9gBugWQForu/hTVCDaLSgfvUNm82SzxNRpJS/yGuFZ/gjLR4dr/0rF8SgX1wNg7d5wxob3oAdCf4WT9tF0Yhbxhs+4uW22yv8xhvVDBXpwIhZaZSN46h4ITzfnDw+Gmm8/fUydE78rqwSvkVy1EO113F6r3C13Th4JtbIuZclvYbKC+JIQneqGy9ajZLH7fmpRIrhJdOU1fhPHk/I9jAxGNMNMbosa/6lB9zUkw3AiANIyKieSZPyCCK3oAQX37epg406ydaISQrjxr2l6up/lQ9u8B/FBkiyM7WG0wnpMxE=
   file_glob: true
   file: RNS-$TRAVIS_TAG-$TARGET.*
@@ -38,7 +37,7 @@ before_cache:
 
 branches:
   only:
-    - /^v\d+\.\d+\.\d+.*$/
+    - /^\d+\.\d+\.\d+.*$/
     - master
 
 notifications:
