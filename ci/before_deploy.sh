@@ -2,7 +2,16 @@ set -ex
 
 main() {
     local src=$(pwd) \
-          stage=$(mktemp -d)
+          stage=
+
+    case $TRAVIS_OS_NAME in
+        linux)
+            stage=$(mktemp -d)
+            ;;
+        osx)
+            stage=$(mktemp -d -t tmp)
+            ;;
+    esac
 
     test -f Cargo.lock || cargo generate-lockfile
 

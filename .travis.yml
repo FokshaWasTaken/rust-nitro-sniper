@@ -22,7 +22,7 @@ before_deploy:
 
 deploy:
   token:
-    secure: cBQU52vaX7ZFK16uTgFNv26MTNTGahHUmozOk7pvZE/tU0KmDwTHuzqYnf0h3kRErH11uMxvys3s0rEb8Ag6h+d1X2Ko8WmJ0ACf3y3BPWlBvela0MGjvE899prEERhBeWOtDCT3eQ0lb8j9hRoNiW5cQUNVs355L0IAgwlML5iq/tispStL8CnvyEKo4Vf+GbhkGLf8XSd+1pNZw3KE8mD58JrbKbLu4u/2o7YiCnjw8ACI9osqHagrZhM/nwVKj4Mt8FSue4lVXdWJ0DFOS6qvv6ofHlGWRNLW6LXipDlprVjOztXSOQcG5n+6nvJryjqfw0J+WFgfuoc5ZG0JcW9VwKi3DbvZgIQnYbcDzpQCWPYif1KGiPRf62Cxn5a9gBugWQForu/hTVCDaLSgfvUNm82SzxNRpJS/yGuFZ/gjLR4dr/0rF8SgX1wNg7d5wxob3oAdCf4WT9tF0Yhbxhs+4uW22yv8xhvVDBXpwIhZaZSN46h4ITzfnDw+Gmm8/fUydE78rqwSvkVy1EO113F6r3C13Th4JtbIuZclvYbKC+JIQneqGy9ajZLH7fmpRIrhJdOU1fhPHk/I9jAxGNMNMbosa/6lB9zUkw3AiANIyKieSZPyCCK3oAQX37epg406ydaISQrjxr2l6up/lQ9u8B/FBkiyM7WG0wnpMxE=
+    secure: ueUmtn+kqXFr4bC7KDB9D6UmUcbg4iUzxfnrCzZgBVCbvQqXjXkYeowfCPXuBwqyMMZn4JNBkYAgnhjgpcuGHc5sa24YAZdlkZbz2ucVv3xn+8b5rgZhMDJHurIwvg2I5/C+ct7tTfncAOwiCdiddPldjLzHoMl1SFvDu6dxAbZeAfYVI+IgkyRa0i9wPzoeo8feXNreGDIXQWa7JyACsocivB5nP3aUB1yMEAcbKimlYo8nidwvi28QeRsCyNSYufMQx7Fg4SHs7BB+1TDxPSaLBGdEL4cdmj6U8kcA15jojG+VdufWSeGDTBpU14wTht29qFHOeW1SFC5zEQpkKHJ/VVyH3BfLbSusK4yRl1nQo4xxaCPgKgOV8fIZKiN8PKgbdMz5cIv/021N1FBSFVFawr3yJrZ7O92sozlN+JqfuJK0VP48WzO/0sGWymJNp2hT8VS06nOTVnQG5I4TJUmDP+pgszpoPXP68huA365UHi22mynNRqGd+Ruw683R2cJHfSw2+GyMqCY8nJ6sAjBVs716cqfzGkGeT+ljyYPh8mGZsO0BKXb1rzfQXdmt2DaNTCG3o6kuFbZPZZqvi4AtFd9jx2vWQ76e8B/uKrj9jnH03/QOGJj1gMYX7tcOVjyZ27tH3CVI1Lz8Nj+RhaQj4Y5aHEUsFTha5tFqlDo=
   file_glob: true
   file: RNS-$TRAVIS_TAG-$TARGET.*
   name: RNS $TRAVIS_TAG
@@ -37,7 +37,7 @@ before_cache:
 
 branches:
   only:
-    - /^\d+\.\d+\.\d+.*$/
+    - "/^\\d+\\.\\d+\\.\\d+.*$/"
     - master
 
 notifications:
