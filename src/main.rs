@@ -65,21 +65,17 @@ async fn main() {
         sniping_tokens.len()
     );
 
-    let handler_info = discord::HandlerInfo {
+    let handler_info = Arc::new(discord::HandlerInfo {
         client,
         config,
         main_profile,
-    };
-
-    let handler = discord::Handler {
-        info: Arc::new(handler_info),
-    };
+    });
 
     let mut tasks = Vec::new();
 
     for (index, token) in sniping_tokens.iter().enumerate() {
         let discord_client_result = DiscordClient::new(token)
-            .event_handler(handler.clone())
+            .event_handler(discord::Handler::new(handler_info.clone()))
             .await;
 
         if let Ok(mut discord_client) = discord_client_result {

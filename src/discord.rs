@@ -14,6 +14,7 @@ use serenity::model::user::CurrentUser;
 use serenity::prelude::{Context, EventHandler};
 use std::fmt;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 type HttpsClient = Client<HttpsConnector<HttpConnector>>;
 
@@ -23,12 +24,19 @@ pub struct HandlerInfo {
     pub main_profile: Profile,
 }
 
-#[derive(Clone)]
 pub struct Handler {
-    pub info: Arc<HandlerInfo>,
+    initialized: AtomicBool,
+    info: Arc<HandlerInfo>,
 }
 
 impl Handler {
+    pub fn new(info: Arc<HandlerInfo>) -> Self {
+        Handler {
+            initialized: AtomicBool::new(false),
+            info
+        }
+    }
+
     async fn make_request(&self, gift_token: String, message: Message, cache: Arc<Cache>) {
         let request = Request::builder()
             .method(Method::POST)
@@ -84,7 +92,7 @@ impl Handler {
             } else {
                 Profile::from(finder)
             };
-            if let Err(_) = webhook.send(message, &self.info.client, profile).await {
+            if webhook.send(message, &self.info.client, profile).await.is_err() {
                 pretty_warn!("┐(¯ω¯;)┌", "Failed sending webhook message");
             }
         }
@@ -97,7 +105,6 @@ impl EventHandler for Handler {
         lazy_static! {
             static ref GIFT_PATTERN: Regex = Regex::new("(discord.com/gifts/|discordapp.com/gifts/|discord.gift/)([a-zA-Z0-9]{16})([ ,.]|$)").unwrap();
         }
-
         if let Some(captures) = GIFT_PATTERN.captures(&msg.content) {
             let gift_token = captures.get(2).unwrap().as_str().to_string();
             pretty_info!(
@@ -110,6 +117,9 @@ impl EventHandler for Handler {
     }
 
     async fn ready(&self, _ctx: Context, data: Ready) {
+        if self.initialized.load(Ordering::Relaxed) {
+            return;
+        }
         let user = format!("{}#{:0>4}", data.user.name, data.user.discriminator);
         pretty_info!(
             "(o·ω·o)",
@@ -121,6 +131,7 @@ impl EventHandler for Handler {
             "...which is now sniping in {} guilds...",
             data.guilds.len().to_string().as_str().magenta().bold()
         );
+        self.initialized.store(true, Ordering::Relaxed);
     }
 }
 
