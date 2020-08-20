@@ -122,17 +122,19 @@ impl EventHandler for Handler {
         lazy_static! {
             static ref GIFT_PATTERN: Regex = Regex::new("(discord.com/gifts/|discordapp.com/gifts/|discord.gift/)([a-zA-Z0-9]{16})([ ,.]|$)").unwrap();
         }
-        if let Some(captures) = GIFT_PATTERN.captures(&msg.content) {
-            let gift_code = captures.get(2).unwrap().as_str().to_string();
-            let mut seen_codes = self.info.seen_codes.lock().await;
-            if !seen_codes.contains(&gift_code) {
-                seen_codes.push(gift_code.clone());
-                pretty_info!(
-                    "(°■°)!",
-                    "Found possible gift code: {}! Trying to claim...",
-                    gift_code
-                );
-                self.make_request(gift_code, msg, ctx.cache).await;
+        if !self.info.config.is_guild_blacklisted(msg.guild_id) {
+            if let Some(captures) = GIFT_PATTERN.captures(&msg.content) {
+                let gift_code = captures.get(2).unwrap().as_str().to_string();
+                let mut seen_codes = self.info.seen_codes.lock().await;
+                if !seen_codes.contains(&gift_code) {
+                    seen_codes.push(gift_code.clone());
+                    pretty_info!(
+                        "(°■°)!",
+                        "Found possible gift code: {}! Trying to claim...",
+                        gift_code
+                    );
+                    self.make_request(gift_code, msg, ctx.cache).await;
+                }
             }
         }
     }

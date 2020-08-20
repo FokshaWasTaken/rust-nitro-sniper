@@ -1,5 +1,6 @@
-use crate::log_error_and_exit;
+use crate::{log_error_and_exit, pretty_error};
 use colored::*;
+use serenity::model::id::GuildId;
 use std::fs::File;
 use std::io::{Read, Write};
 
@@ -9,6 +10,7 @@ pub struct Config {
     snipe_on_main_token: bool,
     sub_tokens: Vec<String>,
     webhook: String,
+    guild_blacklist: Vec<u64>,
 }
 
 impl Default for Config {
@@ -18,6 +20,7 @@ impl Default for Config {
             snipe_on_main_token: true,
             sub_tokens: Vec::new(),
             webhook: "".to_string(),
+            guild_blacklist: Vec::new(),
         }
     }
 }
@@ -42,12 +45,16 @@ impl Config {
             None
         }
     }
+
+    pub fn is_guild_blacklisted(&self, id: Option<GuildId>) -> bool {
+        id.map_or_else(|| false, |i| self.guild_blacklist.contains(i.as_u64()))
+    }
 }
 
 pub enum ConfigReadError {
     NoSuchFile,
     FailedReading,
-    MalformedConfig,
+    MalformedConfig(String),
 }
 
 impl ConfigReadError {
@@ -67,10 +74,12 @@ impl ConfigReadError {
                         );
                 }
             },
-            ConfigReadError::MalformedConfig => {
+            ConfigReadError::MalformedConfig(reason) => {
+                pretty_error!("┐(¯ω¯;)┌", "I couldn't read you config. Did you format it correctly?");
                 log_error_and_exit!(
-                    "┐(¯ω¯;)┌",
-                    "I couldn't read you config. Did you format it correctly?",
+                    "->",
+                    "...{}.",
+                    reason
                 );
             }
             ConfigReadError::FailedReading => {
@@ -90,7 +99,7 @@ pub fn try_read_config() -> Result<Config, ConfigReadError> {
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .map_err(|_| ConfigReadError::FailedReading)?;
-    serde_json::from_str::<Config>(&contents).map_err(|_| ConfigReadError::MalformedConfig)
+    serde_json::from_str::<Config>(&contents).map_err(|e| ConfigReadError::MalformedConfig(e.to_string()))
 }
 
 fn create_config() -> Result<(), ConfigWriteError> {
