@@ -41,7 +41,7 @@ impl Handler {
         let request = Request::builder()
             .method(Method::POST)
             .uri(format!(
-                "https://discordapp.com/api/v6/entitlements/gift-codes/{}/redeem",
+                "https://discordapp.com/api/v8/entitlements/gift-codes/{}/redeem",
                 gift_token
             ))
             .header("Authorization", &self.info.config.main_token())
