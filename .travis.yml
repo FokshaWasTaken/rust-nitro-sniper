@@ -24,7 +24,7 @@ deploy:
   token:
     secure: ueUmtn+kqXFr4bC7KDB9D6UmUcbg4iUzxfnrCzZgBVCbvQqXjXkYeowfCPXuBwqyMMZn4JNBkYAgnhjgpcuGHc5sa24YAZdlkZbz2ucVv3xn+8b5rgZhMDJHurIwvg2I5/C+ct7tTfncAOwiCdiddPldjLzHoMl1SFvDu6dxAbZeAfYVI+IgkyRa0i9wPzoeo8feXNreGDIXQWa7JyACsocivB5nP3aUB1yMEAcbKimlYo8nidwvi28QeRsCyNSYufMQx7Fg4SHs7BB+1TDxPSaLBGdEL4cdmj6U8kcA15jojG+VdufWSeGDTBpU14wTht29qFHOeW1SFC5zEQpkKHJ/VVyH3BfLbSusK4yRl1nQo4xxaCPgKgOV8fIZKiN8PKgbdMz5cIv/021N1FBSFVFawr3yJrZ7O92sozlN+JqfuJK0VP48WzO/0sGWymJNp2hT8VS06nOTVnQG5I4TJUmDP+pgszpoPXP68huA365UHi22mynNRqGd+Ruw683R2cJHfSw2+GyMqCY8nJ6sAjBVs716cqfzGkGeT+ljyYPh8mGZsO0BKXb1rzfQXdmt2DaNTCG3o6kuFbZPZZqvi4AtFd9jx2vWQ76e8B/uKrj9jnH03/QOGJj1gMYX7tcOVjyZ27tH3CVI1Lz8Nj+RhaQj4Y5aHEUsFTha5tFqlDo=
   file_glob: true
-  file: RNS-$TRAVIS_TAG-$TARGET.*
+  file: rns-$TRAVIS_TAG-$TARGET.*
   name: RNS $TRAVIS_TAG
   on:
     tags: true

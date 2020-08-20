@@ -20,6 +20,7 @@ main() {
     cp target/$TARGET/release/rust-nitro-sniper* $stage/
 
     cd $stage
+    rm rust-nitro-sniper.d
     tar czf $src/rns-$TRAVIS_TAG-$TARGET.tar.gz *
     cd $src
 
