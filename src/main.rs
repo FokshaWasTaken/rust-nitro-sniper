@@ -65,11 +65,7 @@ async fn main() {
         sniping_tokens.len()
     );
 
-    let handler_info = Arc::new(discord::HandlerInfo {
-        client,
-        config,
-        main_profile,
-    });
+    let handler_info = Arc::new(discord::HandlerInfo::new(client, config, main_profile));
 
     let mut tasks = Vec::new();
 

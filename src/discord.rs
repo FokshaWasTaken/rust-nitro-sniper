@@ -13,15 +13,28 @@ use serenity::model::gateway::Ready;
 use serenity::model::user::CurrentUser;
 use serenity::prelude::{Context, EventHandler};
 use std::fmt;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 type HttpsClient = Client<HttpsConnector<HttpConnector>>;
 
 pub struct HandlerInfo {
-    pub client: HttpsClient,
-    pub config: Config,
-    pub main_profile: Profile,
+    client: HttpsClient,
+    config: Config,
+    main_profile: Profile,
+    seen_codes: Mutex<Vec<String>>,
+}
+
+impl HandlerInfo {
+    pub fn new(client: HttpsClient, config: Config, main_profile: Profile) -> Self {
+        HandlerInfo {
+            client,
+            config,
+            main_profile,
+            seen_codes: Mutex::new(Vec::new()),
+        }
+    }
 }
 
 pub struct Handler {
@@ -33,16 +46,16 @@ impl Handler {
     pub fn new(info: Arc<HandlerInfo>) -> Self {
         Handler {
             initialized: AtomicBool::new(false),
-            info
+            info,
         }
     }
 
-    async fn make_request(&self, gift_token: String, message: Message, cache: Arc<Cache>) {
+    async fn make_request(&self, gift_code: String, message: Message, cache: Arc<Cache>) {
         let request = Request::builder()
             .method(Method::POST)
             .uri(format!(
                 "https://discordapp.com/api/v8/entitlements/gift-codes/{}/redeem",
-                gift_token
+                gift_code
             ))
             .header("Authorization", &self.info.config.main_token())
             .header("Content-Length", 0)
@@ -92,7 +105,11 @@ impl Handler {
             } else {
                 Profile::from(finder)
             };
-            if webhook.send(message, &self.info.client, profile).await.is_err() {
+            if webhook
+                .send(message, &self.info.client, profile)
+                .await
+                .is_err()
+            {
                 pretty_warn!("┐(¯ω¯;)┌", "Failed sending webhook message");
             }
         }
@@ -106,13 +123,17 @@ impl EventHandler for Handler {
             static ref GIFT_PATTERN: Regex = Regex::new("(discord.com/gifts/|discordapp.com/gifts/|discord.gift/)([a-zA-Z0-9]{16})([ ,.]|$)").unwrap();
         }
         if let Some(captures) = GIFT_PATTERN.captures(&msg.content) {
-            let gift_token = captures.get(2).unwrap().as_str().to_string();
-            pretty_info!(
-                "(°■°)!",
-                "Found possible gift token: {}! Trying to claim...",
-                gift_token
-            );
-            self.make_request(gift_token, msg, ctx.cache).await;
+            let gift_code = captures.get(2).unwrap().as_str().to_string();
+            let mut seen_codes = self.info.seen_codes.lock().await;
+            if !seen_codes.contains(&gift_code) {
+                seen_codes.push(gift_code.clone());
+                pretty_info!(
+                    "(°■°)!",
+                    "Found possible gift code: {}! Trying to claim...",
+                    gift_code
+                );
+                self.make_request(gift_code, msg, ctx.cache).await;
+            }
         }
     }
 
