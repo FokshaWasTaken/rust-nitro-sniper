@@ -1,6 +1,7 @@
 mod config;
 mod discord;
 mod webhook;
+mod matcher;
 #[macro_use]
 mod logging;
 

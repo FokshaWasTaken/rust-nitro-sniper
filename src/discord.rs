@@ -1,11 +1,11 @@
 use crate::config::Config;
 use crate::webhook::Webhook;
+use crate::matcher::get_gift_code;
 use crate::{log_error_and_exit, pretty_error, pretty_info, pretty_success, pretty_warn};
 use colored::*;
 use hyper::client::HttpConnector;
 use hyper::{Body, Client, Method, Request, StatusCode};
 use hyper_tls::HttpsConnector;
-use regex::Regex;
 use serenity::async_trait;
 use serenity::cache::Cache;
 use serenity::model::channel::Message;
@@ -119,12 +119,8 @@ impl Handler {
 #[async_trait]
 impl EventHandler for Handler {
     async fn message(&self, ctx: Context, msg: Message) {
-        lazy_static! {
-            static ref GIFT_PATTERN: Regex = Regex::new("(discord.com/gifts/|discordapp.com/gifts/|discord.gift/)([a-zA-Z0-9]{16})([ ,.]|$)").unwrap();
-        }
         if !self.info.config.is_guild_blacklisted(msg.guild_id) {
-            if let Some(captures) = GIFT_PATTERN.captures(&msg.content) {
-                let gift_code = captures.get(2).unwrap().as_str().to_string();
+            if let Some(gift_code) = get_gift_code(&msg) {
                 let mut seen_codes = self.info.seen_codes.lock().await;
                 if !seen_codes.contains(&gift_code) {
                     seen_codes.push(gift_code.clone());
