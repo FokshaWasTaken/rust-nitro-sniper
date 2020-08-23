@@ -1,6 +1,6 @@
 [package]
 name = "rust-nitro-sniper"
-version = "2.5.0"
+version = "2.5.1"
 authors = ["Mel"]
 edition = "2018"
 
@@ -20,7 +20,8 @@ serde_derive = "1.0"
 futures = "0.3.5"
 
 [dependencies.serenity]
-version = "0.9.0-rc.0"
+git = "https://github.com/Melonai/serenity"
+branch = "current"
 default-features = false
 features = ["client", "rustls_backend", "model", "builder", "cache", "http", "utils", "gateway"]
 
