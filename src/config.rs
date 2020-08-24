@@ -75,12 +75,11 @@ impl ConfigReadError {
                 }
             },
             ConfigReadError::MalformedConfig(reason) => {
-                pretty_error!("┐(¯ω¯;)┌", "I couldn't read you config. Did you format it correctly?");
-                log_error_and_exit!(
-                    "->",
-                    "...{}.",
-                    reason
+                pretty_error!(
+                    "┐(¯ω¯;)┌",
+                    "I couldn't read you config. Did you format it correctly?"
                 );
+                log_error_and_exit!("->", "...{}.", reason);
             }
             ConfigReadError::FailedReading => {
                 log_error_and_exit!("┐(¯ω¯;)┌", "I wasn't able to open your config...");
@@ -99,7 +98,8 @@ pub fn try_read_config() -> Result<Config, ConfigReadError> {
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .map_err(|_| ConfigReadError::FailedReading)?;
-    serde_json::from_str::<Config>(&contents).map_err(|e| ConfigReadError::MalformedConfig(e.to_string()))
+    serde_json::from_str::<Config>(&contents)
+        .map_err(|e| ConfigReadError::MalformedConfig(e.to_string()))
 }
 
 fn create_config() -> Result<(), ConfigWriteError> {

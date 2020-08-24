@@ -750,9 +750,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.4.0"
+version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b631f7e854af39a1739f401cf34a8a013dfe09eac4fa4dba91e9768bd28168d"
+checksum = "260e51e7efe62b592207e9e13a68e43692a7a279171d6ba57abd208bf23645ad"
 
 [[package]]
 name = "opaque-debug"
@@ -1011,7 +1011,7 @@ dependencies = [
 
 [[package]]
 name = "rust-nitro-sniper"
-version = "2.5.1"
+version = "2.5.2"
 dependencies = [
  "chrono",
  "colored 2.0.0",
@@ -1021,6 +1021,7 @@ dependencies = [
  "hyper-tls",
  "lazy_static",
  "log",
+ "once_cell",
  "openssl",
  "regex",
  "serde",
@@ -1138,7 +1139,7 @@ dependencies = [
 [[package]]
 name = "serenity"
 version = "0.9.0-rc.0"
-source = "git+https://github.com/Melonai/serenity?branch=current#2e2424aa7a99ec3b624187901818edf27e139808"
+source = "git+https://github.com/Melonai/serenity?branch=current#9581d27badf313bfd2a2765f4ce0f02e94ed1f31"
 dependencies = [
  "async-trait",
  "async-tungstenite",

@@ -1,9 +1,12 @@
-use serenity::model::channel::Message;
 use regex::Regex;
+use serenity::model::channel::Message;
 
 pub fn get_gift_code(message: &Message) -> Option<String> {
     lazy_static! {
-        static ref GIFT_PATTERN: Regex = Regex::new("(discord.com/gifts/|discordapp.com/gifts/|discord.gift/)[ ]*([a-zA-Z0-9]{16,24})").unwrap();
+        static ref GIFT_PATTERN: Regex = Regex::new(
+            "(discord.com/gifts/|discordapp.com/gifts/|discord.gift/)[ ]*([a-zA-Z0-9]{16,24})"
+        )
+        .unwrap();
     }
     let cleaned_content = sanitize_markdown(&message.content);
     if let Some(captures) = GIFT_PATTERN.captures(&cleaned_content) {

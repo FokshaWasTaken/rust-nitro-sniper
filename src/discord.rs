@@ -1,15 +1,17 @@
 use crate::config::Config;
-use crate::webhook::Webhook;
 use crate::matcher::get_gift_code;
+use crate::webhook::Webhook;
 use crate::{log_error_and_exit, pretty_error, pretty_info, pretty_success, pretty_warn};
 use colored::*;
 use hyper::client::HttpConnector;
 use hyper::{Body, Client, Method, Request, StatusCode};
 use hyper_tls::HttpsConnector;
+use once_cell::sync::OnceCell;
 use serenity::async_trait;
-use serenity::cache::Cache;
+use serenity::http::GuildPagination;
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
+use serenity::model::id::GuildId;
 use serenity::model::user::CurrentUser;
 use serenity::prelude::{Context, EventHandler};
 use std::fmt;
@@ -22,16 +24,14 @@ type HttpsClient = Client<HttpsConnector<HttpConnector>>;
 pub struct HandlerInfo {
     client: HttpsClient,
     config: Config,
-    main_profile: Profile,
     seen_codes: Mutex<Vec<String>>,
 }
 
 impl HandlerInfo {
-    pub fn new(client: HttpsClient, config: Config, main_profile: Profile) -> Self {
+    pub fn new(client: HttpsClient, config: Config) -> Self {
         HandlerInfo {
             client,
             config,
-            main_profile,
             seen_codes: Mutex::new(Vec::new()),
         }
     }
@@ -39,6 +39,7 @@ impl HandlerInfo {
 
 pub struct Handler {
     initialized: AtomicBool,
+    profile: OnceCell<Profile>,
     info: Arc<HandlerInfo>,
 }
 
@@ -46,11 +47,12 @@ impl Handler {
     pub fn new(info: Arc<HandlerInfo>) -> Self {
         Handler {
             initialized: AtomicBool::new(false),
+            profile: OnceCell::new(),
             info,
         }
     }
 
-    async fn make_request(&self, gift_code: String, message: Message, cache: Arc<Cache>) {
+    async fn make_request(&self, gift_code: String, message: Message) {
         let request = Request::builder()
             .method(Method::POST)
             .uri(format!(
@@ -64,7 +66,7 @@ impl Handler {
 
         if let Ok(response) = self.info.client.request(request).await {
             match response.status() {
-                StatusCode::OK => self.on_success(message, cache.current_user().await).await,
+                StatusCode::OK => self.on_success(message).await,
                 StatusCode::METHOD_NOT_ALLOWED => {
                     pretty_error!("(x_x)", "There was an error on Discord's side.")
                 }
@@ -95,24 +97,33 @@ impl Handler {
         }
     }
 
-    async fn on_success(&self, message: Message, finder: CurrentUser) {
+    async fn on_success(&self, message: Message) {
         pretty_success!("o(»ω«)o", "Yay! Claimed code!");
         if let Some(webhook_url) = self.info.config.webhook() {
             pretty_success!("(o·ω·o)", "Sending webhook message!");
             let webhook = Webhook::new(webhook_url);
-            let profile = if finder.id == 0 {
-                self.info.main_profile.clone()
-            } else {
-                Profile::from(finder)
-            };
             if webhook
-                .send(message, &self.info.client, profile)
+                .send(message, &self.info.client, self.profile.get().unwrap())
                 .await
                 .is_err()
             {
                 pretty_warn!("┐(¯ω¯;)┌", "Failed sending webhook message");
             }
         }
+    }
+
+    fn initialize(&self, profile: Profile, guild_amount: usize) {
+        pretty_info!(
+            "(o·ω·o)",
+            "Connected as {}!",
+            profile.to_string().as_str().magenta().bold()
+        );
+        pretty_info!(
+            "( ´-ω·)±┻┳══━─",
+            "...which is now sniping in {} guilds...",
+            guild_amount.to_string().as_str().magenta().bold()
+        );
+        self.profile.set(profile).unwrap();
     }
 }
 
@@ -129,8 +140,18 @@ impl EventHandler for Handler {
                         "Found possible gift code: {}! Trying to claim...",
                         gift_code
                     );
-                    self.make_request(gift_code, msg, ctx.cache).await;
+                    self.make_request(gift_code, msg).await;
                 }
+            } else if !self.initialized.load(Ordering::Relaxed) {
+                self.initialized.store(true, Ordering::Relaxed);
+                let profile = Profile::from(ctx.http.get_current_user().await.unwrap());
+                let guild_amount = ctx
+                    .http
+                    .get_guilds(&GuildPagination::After(GuildId(0)), 100)
+                    .await
+                    .unwrap()
+                    .len();
+                self.initialize(profile, guild_amount);
             }
         }
     }
@@ -139,22 +160,12 @@ impl EventHandler for Handler {
         if self.initialized.load(Ordering::Relaxed) {
             return;
         }
-        let user = format!("{}#{:0>4}", data.user.name, data.user.discriminator);
-        pretty_info!(
-            "(o·ω·o)",
-            "Connected as {}!",
-            user.as_str().magenta().bold()
-        );
-        pretty_info!(
-            "( ´-ω·)±┻┳══━─",
-            "...which is now sniping in {} guilds...",
-            data.guilds.len().to_string().as_str().magenta().bold()
-        );
         self.initialized.store(true, Ordering::Relaxed);
+        self.initialize(Profile::from(data.user), data.guilds.len());
     }
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Profile {
     username: String,
     discriminator: String,

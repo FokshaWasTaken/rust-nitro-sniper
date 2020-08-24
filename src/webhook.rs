@@ -20,7 +20,7 @@ impl Webhook {
         &self,
         message: Message,
         client: &HttpsClient,
-        finder: Profile,
+        finder: &Profile,
     ) -> Result<(), ()> {
         let payload = WebhookPayload::new(message, finder);
         let request = Request::builder()
@@ -51,7 +51,7 @@ struct WebhookPayload {
 }
 
 impl WebhookPayload {
-    fn new(message: Message, finder: Profile) -> Self {
+    fn new(message: Message, finder: &Profile) -> Self {
         let embed = Embed::fake(|create| {
             create
                 .author(|a| a.icon_url(finder.face()).name(finder.to_string()))

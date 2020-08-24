@@ -1,7 +1,7 @@
 mod config;
 mod discord;
-mod webhook;
 mod matcher;
+mod webhook;
 #[macro_use]
 mod logging;
 
@@ -62,11 +62,11 @@ async fn main() {
 
     pretty_info!(
         "(o·ω·o)",
-        "I'll be sniping on {} account(s)!",
+        "I'll be sniping on {} account(s)! Let me connect to them...",
         sniping_tokens.len()
     );
 
-    let handler_info = Arc::new(discord::HandlerInfo::new(client, config, main_profile));
+    let handler_info = Arc::new(discord::HandlerInfo::new(client, config));
 
     let mut tasks = Vec::new();
 
