@@ -1,6 +1,8 @@
+mod cache;
 mod config;
 mod discord;
 mod matcher;
+mod util;
 mod webhook;
 #[macro_use]
 mod logging;
@@ -45,7 +47,7 @@ async fn main() {
 
     pretty_info!(
         "o(»ω«)o",
-        "If we're lucky you'll get Nitro on {}!",
+        "If we're lucky you'll get Nitro on {}!\n",
         main_profile
     );
 
@@ -62,7 +64,7 @@ async fn main() {
 
     pretty_info!(
         "(o·ω·o)",
-        "I'll be sniping on {} account(s)! Let me connect to them...",
+        "I'll be sniping on {} account(s)! Let me connect to them...\n",
         sniping_tokens.len()
     );
 

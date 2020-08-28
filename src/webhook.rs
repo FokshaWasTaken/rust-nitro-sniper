@@ -1,4 +1,5 @@
 use crate::discord::Profile;
+use crate::util::user_to_tag;
 use hyper::client::HttpConnector;
 use hyper::{Body, Client, Method, Request, StatusCode};
 use hyper_tls::HttpsConnector;
@@ -18,7 +19,7 @@ impl Webhook {
 
     pub async fn send(
         &self,
-        message: Message,
+        message: &Message,
         client: &HttpsClient,
         finder: &Profile,
     ) -> Result<(), ()> {
@@ -51,7 +52,7 @@ struct WebhookPayload {
 }
 
 impl WebhookPayload {
-    fn new(message: Message, finder: &Profile) -> Self {
+    fn new(message: &Message, finder: &Profile) -> Self {
         let embed = Embed::fake(|create| {
             create
                 .author(|a| a.icon_url(finder.face()).name(finder.to_string()))
@@ -59,7 +60,7 @@ impl WebhookPayload {
                 .description("o(»ω«)o Congratulations! I'm so proud of you!\nMaybe star me on [GitHub](https://github.com/Melonai/rust-nitro-sniper)? (ﾉ´ヮ´)ﾉ*:･ﾟ✧")
                 .field(
                     "Nitro sent by:",
-                    format!("{}#{}", message.author.name, message.author.discriminator),
+                    user_to_tag(&message.author),
                     false,
                 )
                 .field(

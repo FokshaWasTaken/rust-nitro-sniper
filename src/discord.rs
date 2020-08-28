@@ -1,5 +1,8 @@
+use crate::cache::LocationCache;
 use crate::config::Config;
+use crate::logging::LogBlock;
 use crate::matcher::get_gift_code;
+use crate::util::user_to_tag;
 use crate::webhook::Webhook;
 use crate::{log_error_and_exit, pretty_error, pretty_info, pretty_success, pretty_warn};
 use colored::*;
@@ -8,7 +11,7 @@ use hyper::{Body, Client, Method, Request, StatusCode};
 use hyper_tls::HttpsConnector;
 use once_cell::sync::OnceCell;
 use serenity::async_trait;
-use serenity::http::GuildPagination;
+use serenity::http::{CacheHttp, GuildPagination, Http};
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::model::id::GuildId;
@@ -40,6 +43,7 @@ impl HandlerInfo {
 pub struct Handler {
     initialized: AtomicBool,
     profile: OnceCell<Profile>,
+    location_cache: LocationCache,
     info: Arc<HandlerInfo>,
 }
 
@@ -48,11 +52,12 @@ impl Handler {
         Handler {
             initialized: AtomicBool::new(false),
             profile: OnceCell::new(),
+            location_cache: LocationCache::new(),
             info,
         }
     }
 
-    async fn make_request(&self, gift_code: String, message: Message) {
+    async fn make_request(&self, gift_code: String, message: &Message, log: &mut LogBlock<'_>) {
         let request = Request::builder()
             .method(Method::POST)
             .uri(format!(
@@ -66,15 +71,22 @@ impl Handler {
 
         if let Ok(response) = self.info.client.request(request).await {
             match response.status() {
-                StatusCode::OK => self.on_success(message).await,
+                StatusCode::OK => self.on_success(message, log).await,
                 StatusCode::METHOD_NOT_ALLOWED => {
-                    pretty_error!("(x_x)", "There was an error on Discord's side.")
+                    pretty_error!(log: log, "(x_x)", "There was an error on Discord's side.");
                 }
-                StatusCode::NOT_FOUND => pretty_error!("(╥ω╥)", "Code was fake."),
-                StatusCode::BAD_REQUEST => pretty_error!("(╥ω╥)", "Code was already redeemed."),
-                StatusCode::TOO_MANY_REQUESTS => pretty_warn!("(x_x)", "We were rate-limited..."),
+                StatusCode::NOT_FOUND => {
+                    pretty_warn!(log: log, "(╥ω╥)", "Code was fake or expired.");
+                }
+                StatusCode::BAD_REQUEST => {
+                    pretty_error!(log: log, "(╥ω╥)", "Code was already redeemed.");
+                }
+                StatusCode::TOO_MANY_REQUESTS => {
+                    pretty_warn!(log: log, "(x_x)", "We were rate-limited...");
+                }
                 unknown => {
                     pretty_error!(
+                        log: log,
                         "┐(¯ω¯;)┌",
                         "Received unknown response... ({}{})",
                         unknown.as_str(),
@@ -86,28 +98,36 @@ impl Handler {
                         .await
                         .map(|b| String::from_utf8(b.to_vec()))
                     {
-                        pretty_error!("->", "...with this body: {}", body);
+                        pretty_error!(log: log, "->", "...with this body: {}", body);
                     } else {
-                        pretty_error!("->", "...and couldn't parse the body of the response.")
+                        pretty_error!(
+                            log: log,
+                            "->",
+                            "...and couldn't parse the body of the response."
+                        );
                     }
                 }
             }
         } else {
-            pretty_warn!("┐(¯ω¯;)┌", "Requesting failed. Check your connection!");
+            pretty_warn!(
+                log: log,
+                "┐(¯ω¯;)┌",
+                "Requesting failed. Check your connection!"
+            );
         }
     }
 
-    async fn on_success(&self, message: Message) {
-        pretty_success!("o(»ω«)o", "Yay! Claimed code!");
+    async fn on_success(&self, message: &Message, log: &mut LogBlock<'_>) {
+        pretty_success!(log: log, "o(»ω«)o", "Yay! Claimed code!");
         if let Some(webhook_url) = self.info.config.webhook() {
-            pretty_success!("(o·ω·o)", "Sending webhook message!");
+            pretty_success!(log: log, "(o·ω·o)", "Sending webhook message!");
             let webhook = Webhook::new(webhook_url);
             if webhook
                 .send(message, &self.info.client, self.profile.get().unwrap())
                 .await
                 .is_err()
             {
-                pretty_warn!("┐(¯ω¯;)┌", "Failed sending webhook message");
+                pretty_error!(log: log, "┐(¯ω¯;)┌", "Failed sending webhook message");
             }
         }
     }
@@ -115,43 +135,62 @@ impl Handler {
     fn initialize(&self, profile: Profile, guild_amount: usize) {
         pretty_info!(
             "(o·ω·o)",
-            "Connected as {}!",
-            profile.to_string().as_str().magenta().bold()
-        );
-        pretty_info!(
-            "( ´-ω·)±┻┳══━─",
-            "...which is now sniping in {} guilds...",
+            "Connected as {}! Now sniping in {} guilds...",
+            profile.to_string().as_str().magenta().bold(),
             guild_amount.to_string().as_str().magenta().bold()
         );
         self.profile.set(profile).unwrap();
+    }
+
+    async fn cache_location(&self, msg: &Message, http: &Http) {
+        let cache_result = self
+            .location_cache
+            .put(msg.channel_id, msg.guild_id, http)
+            .await;
+
+        if cache_result.is_err() {
+            pretty_warn!("(x_x)", "Failed to cache message location.");
+        }
     }
 }
 
 #[async_trait]
 impl EventHandler for Handler {
     async fn message(&self, ctx: Context, msg: Message) {
+        if !self.initialized.load(Ordering::Relaxed) {
+            self.initialized.store(true, Ordering::Relaxed);
+            let profile = Profile::from(ctx.http().get_current_user().await.unwrap());
+            let guild_amount = ctx
+                .http
+                .get_guilds(&GuildPagination::After(GuildId(0)), 100)
+                .await
+                .unwrap()
+                .len();
+            self.initialize(profile, guild_amount);
+        } else if self.profile.get().is_none() {
+            return;
+        }
+
         if !self.info.config.is_guild_blacklisted(msg.guild_id) {
             if let Some(gift_code) = get_gift_code(&msg) {
                 let mut seen_codes = self.info.seen_codes.lock().await;
                 if !seen_codes.contains(&gift_code) {
                     seen_codes.push(gift_code.clone());
-                    pretty_info!(
-                        "(°■°)!",
-                        "Found possible gift code: {}! Trying to claim...",
-                        gift_code
-                    );
-                    self.make_request(gift_code, msg).await;
+
+                    let mut log = LogBlock::new(self.profile.get().unwrap());
+                    pretty_info!(log: log, "(°■°)!", "Claiming code: {}!", gift_code);
+
+                    self.make_request(gift_code, &msg, &mut log).await;
+                    log.freeze_time();
+
+                    let location = self
+                        .location_cache
+                        .get_or_fetch(msg.channel_id, msg.guild_id, ctx.http())
+                        .await;
+                    log.send(location, user_to_tag(&msg.author));
                 }
-            } else if !self.initialized.load(Ordering::Relaxed) {
-                self.initialized.store(true, Ordering::Relaxed);
-                let profile = Profile::from(ctx.http.get_current_user().await.unwrap());
-                let guild_amount = ctx
-                    .http
-                    .get_guilds(&GuildPagination::After(GuildId(0)), 100)
-                    .await
-                    .unwrap()
-                    .len();
-                self.initialize(profile, guild_amount);
+            } else {
+                self.cache_location(&msg, ctx.http()).await;
             }
         }
     }
