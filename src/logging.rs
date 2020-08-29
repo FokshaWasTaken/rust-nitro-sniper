@@ -155,6 +155,11 @@ fn map_level(level: Level) -> ColoredString {
 }
 
 pub fn set_up_logger() -> Result<(), SetLoggerError> {
+    #[cfg(windows)]
+    {
+        let _ = colored::control::set_virtual_terminal(true);
+    }
+
     fern::Dispatch::new()
         .format(move |out, message, record| {
             out.finish(format_args!(
