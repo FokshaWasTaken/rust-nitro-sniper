@@ -101,13 +101,10 @@ impl<'a> LogBlock<'a> {
         };
 
         println!(
-            "\n{} › ({}) [{} > {} > {}]",
+            "\n{} › ({}) [{} > {}]",
             chrono::Local::now().format("%H:%M:%S"),
             self.profile,
-            location
-                .guild_name
-                .unwrap_or_else(|| "Direct Messages".to_string()),
-            location.channel_name,
+            location,
             sender
         );
 

@@ -145,11 +145,11 @@ impl Handler {
     async fn cache_location(&self, msg: &Message, http: &Http) {
         let cache_result = self
             .location_cache
-            .put(msg.channel_id, msg.guild_id, http)
+            .get_and_cache_location(msg.channel_id, msg.guild_id, http)
             .await;
 
         if cache_result.is_err() {
-            pretty_warn!("(x_x)", "Failed to cache message location.");
+            pretty_warn!("(x_x)", "Failed to cache message location");
         }
     }
 }
@@ -185,7 +185,7 @@ impl EventHandler for Handler {
 
                     let location = self
                         .location_cache
-                        .get_or_fetch(msg.channel_id, msg.guild_id, ctx.http())
+                        .get_and_cache_location(msg.channel_id, msg.guild_id, ctx.http())
                         .await;
                     log.send(location, user_to_tag(&msg.author));
                 }
