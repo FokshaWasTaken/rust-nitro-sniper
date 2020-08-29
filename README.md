@@ -4,6 +4,20 @@
 
 Hi! **RNS** is a **simple** and **easy to use** Nitro Sniper for Discord written in the speedy Rust language.
 
+## Features
+
+Feature-wise RNS can compete with other paid and closed-source snipers, but without any cost and risk and attached!
+
+- Snipes on multiple accounts at once using sub-tokens
+
+- Keeps your accounts within the rate limits using a cache of codes to not request again.
+
+- Shows you comprehensive information about each attempted and successful snipe in the logs
+
+- Discord webhook support
+
+...and even more to come.
+
 ## Running
 
 1. [Download](https://github.com/Melonai/rust-nitro-sniper/releases/) or build an executable for your respective platform.
@@ -23,7 +37,8 @@ The `rns-config.json` file created by RNS is formatted in this manner:
   "main_token": "YOUR_TOKEN",
   "snipe_on_main_token": true,
   "sub_tokens": ["YOUR_SECOND_TOKEN", "...", "YOUR_NTH_TOKEN"],
-  "webhook": ""
+  "webhook": "https://discordapp.com/api/webhooks/.../...",
+  "guild_blacklist": [123456789123456789]
 }
 ```
 ...where:
@@ -34,7 +49,9 @@ The `rns-config.json` file created by RNS is formatted in this manner:
 
 - ...the `sub_tokens` property is a list of all the tokens with which RNS will try to snipe.
 
-- ...and the `webhook` is the Discord webhook URL. Leave blank if you don't need webhook messages.
+- ...the `webhook` is the Discord webhook URL. Leave blank if you don't need webhook messages.
+
+- ...and the `guild_blacklist` is the list of Guild IDs you want RNS to ignore. 
 
 ---
 #### Disclaimer
