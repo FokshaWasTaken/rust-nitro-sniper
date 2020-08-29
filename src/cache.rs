@@ -1,4 +1,3 @@
-use colored::*;
 use serenity::http::Http;
 use serenity::model::channel::Channel;
 use serenity::model::id::{ChannelId, GuildId};
@@ -26,7 +25,8 @@ impl Location {
         let channel_name = match channel {
             Channel::Guild(guild_channel) => guild_channel.name,
             Channel::Private(private_channel) => private_channel.name(),
-            _ => unimplemented!(),
+            Channel::Group(group) => group.name().to_string(),
+            _ => unreachable!()
         };
 
         Location {
@@ -64,7 +64,7 @@ impl LocationCache {
         let location = match (guild_result, channel_result) {
             (Some(Ok(guild)), Ok(channel)) => Location::new(Some(guild.name), channel),
             (None, Ok(channel)) => Location::new(None, channel),
-            _ => return Err(())
+            _ => return Err(()),
         };
 
         Ok(location)
