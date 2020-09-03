@@ -18,7 +18,7 @@ use serenity::model::id::GuildId;
 use serenity::model::user::CurrentUser;
 use serenity::prelude::{Context, EventHandler};
 use std::fmt;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -28,14 +28,20 @@ pub struct HandlerInfo {
     client: HttpsClient,
     config: Config,
     seen_codes: Mutex<Vec<String>>,
+    token_amount: usize,
+    connected: AtomicUsize,
+    total_guilds: AtomicUsize,
 }
 
 impl HandlerInfo {
-    pub fn new(client: HttpsClient, config: Config) -> Self {
+    pub fn new(client: HttpsClient, config: Config, token_amount: usize) -> Self {
         HandlerInfo {
             client,
             config,
             seen_codes: Mutex::new(Vec::new()),
+            token_amount,
+            connected: AtomicUsize::new(0),
+            total_guilds: AtomicUsize::new(0),
         }
     }
 }
@@ -140,17 +146,31 @@ impl Handler {
             guild_amount.to_string().as_str().magenta().bold()
         );
         self.profile.set(profile).unwrap();
+        self.info
+            .total_guilds
+            .fetch_add(guild_amount, Ordering::Relaxed);
+
+        if self.info.connected.fetch_add(1, Ordering::Relaxed) + 1 == self.info.token_amount
+            && self.info.token_amount > 1
+        {
+            pretty_info!(
+                "( ´-ω·)±┻┳══━─",
+                "Connected to all {} accounts! Sniping in {} guilds in total!",
+                self.info.token_amount,
+                self.info.total_guilds.load(Ordering::Relaxed)
+            );
+        }
     }
 
-    async fn cache_location(&self, msg: &Message, http: &Http) {
-        let cache_result = self
-            .location_cache
-            .get_and_cache_location(msg.channel_id, msg.guild_id, http)
-            .await;
-
-        if cache_result.is_err() {
-            pretty_warn!("(x_x)", "Failed to cache message location");
-        }
+    async fn initialize_from_raw(&self, http: &Http) {
+        self.initialized.store(true, Ordering::Relaxed);
+        let profile = Profile::from(http.get_current_user().await.unwrap());
+        let guild_amount = http
+            .get_guilds(&GuildPagination::After(GuildId(0)), 100)
+            .await
+            .unwrap()
+            .len();
+        self.initialize(profile, guild_amount);
     }
 }
 
@@ -158,15 +178,7 @@ impl Handler {
 impl EventHandler for Handler {
     async fn message(&self, ctx: Context, msg: Message) {
         if !self.initialized.load(Ordering::Relaxed) {
-            self.initialized.store(true, Ordering::Relaxed);
-            let profile = Profile::from(ctx.http().get_current_user().await.unwrap());
-            let guild_amount = ctx
-                .http
-                .get_guilds(&GuildPagination::After(GuildId(0)), 100)
-                .await
-                .unwrap()
-                .len();
-            self.initialize(profile, guild_amount);
+            self.initialize_from_raw(ctx.http()).await;
         } else if self.profile.get().is_none() {
             return;
         }
@@ -189,8 +201,6 @@ impl EventHandler for Handler {
                         .await;
                     log.send(location, user_to_tag(&msg.author));
                 }
-            } else {
-                self.cache_location(&msg, ctx.http()).await;
             }
         }
     }

@@ -1,13 +1,13 @@
+use serde::export::Formatter;
 use serenity::http::Http;
 use serenity::model::channel::Channel;
 use serenity::model::id::{ChannelId, GuildId};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
-use tokio::sync::Mutex;
-use std::sync::Arc;
-use std::fmt::Display;
-use serde::export::Formatter;
 use std::fmt;
+use std::fmt::Display;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 #[derive(Clone)]
 pub struct Location {
@@ -40,7 +40,7 @@ impl Location {
             Channel::Guild(guild_channel) => guild_channel.name,
             Channel::Private(private_channel) => private_channel.name(),
             Channel::Group(group) => group.name().to_string(),
-            _ => unreachable!()
+            _ => unreachable!(),
         };
 
         Location {
@@ -52,14 +52,14 @@ impl Location {
 
 pub struct LocationCache {
     channel_map: Mutex<HashMap<ChannelId, Location>>,
-    guild_map: Mutex<HashMap<GuildId, Arc<String>>>
+    guild_map: Mutex<HashMap<GuildId, Arc<String>>>,
 }
 
 impl LocationCache {
     pub fn new() -> Self {
         LocationCache {
             channel_map: Mutex::new(HashMap::new()),
-            guild_map: Mutex::new(HashMap::new())
+            guild_map: Mutex::new(HashMap::new()),
         }
     }
 
@@ -106,12 +106,15 @@ impl LocationCache {
         }
     }
 
-    pub async fn get_and_cache_guild(&self, guild_id: GuildId, http: &Http) -> Result<Arc<String>, ()> {
+    pub async fn get_and_cache_guild(
+        &self,
+        guild_id: GuildId,
+        http: &Http,
+    ) -> Result<Arc<String>, ()> {
         let mut guild_map = self.guild_map.lock().await;
 
         match guild_map.entry(guild_id) {
             Entry::Vacant(entry) => {
-
                 if let Ok(response) = http.get_guild(guild_id.0).await {
                     Ok(entry.insert(Arc::new(response.name)).clone())
                 } else {
