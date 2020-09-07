@@ -1,6 +1,6 @@
 [package]
 name = "rust-nitro-sniper"
-version = "2.6.4"
+version = "2.6.5"
 authors = ["Mel"]
 edition = "2018"
 
