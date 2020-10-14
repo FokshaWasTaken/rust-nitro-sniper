@@ -167,6 +167,7 @@ pub fn set_up_logger() -> Result<(), SetLoggerError> {
             ))
         })
         .level_for("serenity", log::LevelFilter::Off)
+        .level_for("tracing::span", log::LevelFilter::Off)
         .level(log::LevelFilter::Info)
         .chain(std::io::stdout())
         .apply()?;

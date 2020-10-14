@@ -77,7 +77,7 @@ async fn main() {
     let mut tasks = Vec::new();
 
     for (index, token) in sniping_tokens.iter().enumerate() {
-        let discord_client_result = DiscordClient::new(token)
+        let discord_client_result = DiscordClient::builder(token)
             .event_handler(discord::Handler::new(handler_info.clone()))
             .await;
 
