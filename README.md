@@ -1,8 +1,17 @@
+[![status: archive](https://github.com/GIScience/badges/raw/master/status/archive.svg)]()
+
+This project is currently ***discontinued***, we will continue providing help for the time being but there will be no work on it until further notice!
+
 # =^.^= Rust Nitro Sniper
 
 [![Build Status](https://travis-ci.org/Melonai/rust-nitro-sniper.svg?branch=master)](https://travis-ci.org/Melonai/rust-nitro-sniper)
 
 Hi! **RNS** is a **simple** and **easy to use** Nitro Sniper for Discord written in the speedy Rust language.
+
+
+# 📡 SNR
+[Server Nitro Ranker](https://github.com/Melonai/SNR), or just [SNR](https://github.com/Melonai/SNR), is an auxiliary tool for RNS that helps you get a better understanding of the Nitro sniping value of the Discord servers you're currently in.
+
 
 ## Features
 
